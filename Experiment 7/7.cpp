@@ -1,113 +1,63 @@
 #include <iostream>
+#include <algorithm>
 using namespace std;
 
-#define MAX 100
-
-int graph[MAX][MAX];
-int visited[MAX];
-int disc[MAX];
-int low[MAX];
-int parent[MAX];
-bool articulation[MAX];
-
-int timer = 0;
-int n;
-
-// DFS to find articulation points
-void DFS(int u)
+struct Activity
 {
-    visited[u] = 1;
-    disc[u] = low[u] = ++timer;
+    int start;
+    int finish;
+    int number;
+};
 
-    int children = 0;
-
-    for (int v = 0; v < n; v++)
-    {
-        if (graph[u][v] == 0)
-            continue;
-
-        // If v is not visited
-        if (!visited[v])
-        {
-            children++;
-            parent[v] = u;
-
-            DFS(v);
-
-            // Update low value
-            low[u] = min(low[u], low[v]);
-
-            // Case 1: u is root
-            if (parent[u] == -1 && children > 1)
-                articulation[u] = true;
-
-            // Case 2: u is not root
-            if (parent[u] != -1 && low[v] >= disc[u])
-                articulation[u] = true;
-        }
-
-        // Back edge
-        else if (v != parent[u])
-        {
-            low[u] = min(low[u], disc[v]);
-        }
-    }
+// Sort activities according to finish time
+bool compare(Activity a, Activity b)
+{
+    return a.finish < b.finish;
 }
 
 int main()
 {
-    int edges;
+    int n;
 
-    cout << "Enter number of vertices: ";
+    cout << "Enter number of activities: ";
     cin >> n;
 
-    cout << "Enter number of edges: ";
-    cin >> edges;
+    Activity activities[100];
 
-    // Initialize graph
-    for (int i = 0; i < n; i++)
-    {
-        visited[i] = 0;
-        parent[i] = -1;
-        articulation[i] = false;
-
-        for (int j = 0; j < n; j++)
-            graph[i][j] = 0;
-    }
-
-    cout << "Enter edges (source destination):\n";
-
-    for (int i = 0; i < edges; i++)
-    {
-        int u, v;
-        cin >> u >> v;
-
-        graph[u - 1][v - 1] = 1;
-        graph[v - 1][u - 1] = 1;
-    }
-
-    // Run DFS for all components
-    for (int i = 0; i < n; i++)
-    {
-        if (!visited[i])
-            DFS(i);
-    }
-
-    cout << "\nCut Vertices (Articulation Points):\n";
-
-    bool found = false;
+    cout << "Enter start and finish time of each activity:\n";
 
     for (int i = 0; i < n; i++)
     {
-        if (articulation[i])
+        activities[i].number = i + 1;
+
+        cout << "Activity " << i + 1 << ": ";
+        cin >> activities[i].start >> activities[i].finish;
+    }
+
+    // Sort activities by finish time
+    sort(activities, activities + n, compare);
+
+    cout << "\nSelected Activities:\n";
+
+    // Select the first activity
+    int lastFinish = activities[0].finish;
+
+    cout << "Activity " << activities[0].number
+         << " (" << activities[0].start
+         << ", " << activities[0].finish << ")\n";
+
+    // Select remaining activities
+    for (int i = 1; i < n; i++)
+    {
+        if (activities[i].start >= lastFinish)
         {
-            cout << "Vertex " << i + 1 << endl;
-            found = true;
+            cout << "Activity " << activities[i].number
+                 << " (" << activities[i].start
+                 << ", " << activities[i].finish << ")\n";
+
+            lastFinish = activities[i].finish;
         }
     }
-
-    if (!found)
-        cout << "No articulation points found." << endl;
 
     return 0;
 }
