@@ -1,5 +1,5 @@
-```c
-#include <stdio.h>
+#include <iostream>
+using namespace std;
 
 #define MAX 100
 
@@ -8,120 +8,106 @@ int visited[MAX];
 int disc[MAX];
 int low[MAX];
 int parent[MAX];
-int articulation[MAX];
+bool articulation[MAX];
 
 int timer = 0;
-int vertices;
+int n;
 
-// DFS function to find articulation points
+// DFS to find articulation points
 void DFS(int u)
 {
-    int children = 0;
-
     visited[u] = 1;
     disc[u] = low[u] = ++timer;
 
-    for (int v = 0; v < vertices; v++)
+    int children = 0;
+
+    for (int v = 0; v < n; v++)
     {
-        if (graph[u][v])
+        if (graph[u][v] == 0)
+            continue;
+
+        // If v is not visited
+        if (!visited[v])
         {
-            // If vertex v is not visited
-            if (!visited[v])
-            {
-                children++;
-                parent[v] = u;
+            children++;
+            parent[v] = u;
 
-                DFS(v);
+            DFS(v);
 
-                // Update low value of u
-                if (low[v] < low[u])
-                    low[u] = low[v];
+            // Update low value
+            low[u] = min(low[u], low[v]);
 
-                // Check if u is an articulation point
-                if (parent[u] == -1 && children > 1)
-                    articulation[u] = 1;
+            // Case 1: u is root
+            if (parent[u] == -1 && children > 1)
+                articulation[u] = true;
 
-                if (parent[u] != -1 && low[v] >= disc[u])
-                    articulation[u] = 1;
-            }
+            // Case 2: u is not root
+            if (parent[u] != -1 && low[v] >= disc[u])
+                articulation[u] = true;
+        }
 
-            // Back edge
-            else if (v != parent[u])
-            {
-                if (disc[v] < low[u])
-                    low[u] = disc[v];
-            }
+        // Back edge
+        else if (v != parent[u])
+        {
+            low[u] = min(low[u], disc[v]);
         }
     }
-}
-
-// Function to find articulation points
-void findArticulationPoints()
-{
-    for (int i = 0; i < vertices; i++)
-    {
-        visited[i] = 0;
-        parent[i] = -1;
-        articulation[i] = 0;
-    }
-
-    timer = 0;
-
-    for (int i = 0; i < vertices; i++)
-    {
-        if (!visited[i])
-            DFS(i);
-    }
-
-    printf("\nCut Vertices (Articulation Points):\n");
-
-    int found = 0;
-
-    for (int i = 0; i < vertices; i++)
-    {
-        if (articulation[i])
-        {
-            printf("Vertex %d\n", i + 1);
-            found = 1;
-        }
-    }
-
-    if (!found)
-        printf("No articulation points found.\n");
 }
 
 int main()
 {
     int edges;
-    int u, v;
 
-    printf("Enter number of vertices: ");
-    scanf("%d", &vertices);
+    cout << "Enter number of vertices: ";
+    cin >> n;
 
-    printf("Enter number of edges: ");
-    scanf("%d", &edges);
+    cout << "Enter number of edges: ";
+    cin >> edges;
 
     // Initialize graph
-    for (int i = 0; i < vertices; i++)
+    for (int i = 0; i < n; i++)
     {
-        for (int j = 0; j < vertices; j++)
-        {
+        visited[i] = 0;
+        parent[i] = -1;
+        articulation[i] = false;
+
+        for (int j = 0; j < n; j++)
             graph[i][j] = 0;
-        }
     }
 
-    printf("\nEnter edges (source destination):\n");
+    cout << "Enter edges (source destination):\n";
 
     for (int i = 0; i < edges; i++)
     {
-        scanf("%d %d", &u, &v);
+        int u, v;
+        cin >> u >> v;
 
         graph[u - 1][v - 1] = 1;
         graph[v - 1][u - 1] = 1;
     }
 
-    findArticulationPoints();
+    // Run DFS for all components
+    for (int i = 0; i < n; i++)
+    {
+        if (!visited[i])
+            DFS(i);
+    }
+
+    cout << "\nCut Vertices (Articulation Points):\n";
+
+    bool found = false;
+
+    for (int i = 0; i < n; i++)
+    {
+        if (articulation[i])
+        {
+            cout << "Vertex " << i + 1 << endl;
+            found = true;
+        }
+    }
+
+    if (!found)
+        cout << "No articulation points found." << endl;
 
     return 0;
 }
-```
